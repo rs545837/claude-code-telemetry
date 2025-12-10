@@ -95,7 +95,7 @@ function handleMetrics(data, res, sessions, langfuse) {
 function handleLogs(data, res, sessions, langfuse) {
   try {
     const logs = JSON.parse(data.toString())
-    logger.debug({ size: data.length }, 'Received logs')
+    logger.info({ size: data.length, hasResourceLogs: !!logs.resourceLogs }, 'Received logs')
 
     // Process each resource log
     if (logs && logs.resourceLogs) {
@@ -109,6 +109,14 @@ function handleLogs(data, res, sessions, langfuse) {
             // Extract session ID
             const attrs = extractAttributesArray(logRecord.attributes)
             const sessionId = attrs['session.id'] || attrs['claude.session.id']
+            const eventName = logRecord.body?.stringValue
+
+            logger.debug({ 
+              eventName, 
+              hasSessionId: !!sessionId, 
+              sessionId,
+              attrsKeys: Object.keys(attrs).slice(0, 10)
+            }, 'Processing log record')
 
             if (sessionId) {
               // Get or create session
@@ -135,7 +143,14 @@ function handleLogs(data, res, sessions, langfuse) {
                 const session = sessions.get(sessionId)
                 processEvent(logRecord, resource, session)
               } else {
-                logger.debug({ body: logRecord.body?.stringValue, attrs }, 'Log without session')
+                logger.warn({ 
+                  body: logRecord.body?.stringValue, 
+                  attrsKeys: Object.keys(attrs),
+                  attrs: Object.keys(attrs).reduce((acc, key) => {
+                    acc[key] = attrs[key];
+                    return acc;
+                  }, {})
+                }, 'Log without session ID - cannot process')
               }
             }
           }

@@ -184,8 +184,16 @@ async function shutdown() {
 
   try {
     await retry(() => langfuse.flushAsync())
+    logger.info('Data flushed to Langfuse')
     // Shutdown Langfuse SDK to close any remaining connections
-    await langfuse.shutdownAsync()
+    try {
+      await langfuse.shutdownAsync()
+    } catch (shutdownError) {
+      // Ignore 401 errors during shutdown as data is already flushed
+      if (!shutdownError.message?.includes('401')) {
+        logger.error({ error: shutdownError }, 'Error during Langfuse shutdown')
+      }
+    }
   } catch (error) {
     logger.error({ error }, 'Error during Langfuse shutdown')
   }

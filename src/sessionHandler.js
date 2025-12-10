@@ -699,7 +699,9 @@ class SessionHandler {
       const baseUrl = (process.env.LANGFUSE_HOST || 'http://localhost:3000').replace(/\/api\/public.*$/, '')
       logger.info(`View at: ${baseUrl}/sessions/${this.sessionId}`)
 
+      // Flush data - the SDK will batch and send to Langfuse
       await retry(() => this.langfuse.flushAsync())
+      logger.info({ sessionId: this.sessionId }, 'Session data flushed to Langfuse')
     } catch (error) {
       logger.error({ error, sessionId: this.sessionId }, 'Error finalizing session')
     }
