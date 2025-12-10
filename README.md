@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
   <img src="https://img.shields.io/badge/Coverage-95.44%25-brightgreen" alt="Code Coverage">
-  <img src="https://img.shields.io/badge/Docker-Required-blue" alt="Docker">
+  <img src="https://img.shields.io/badge/Docker-Optional-blue" alt="Docker">
   <img src="https://img.shields.io/badge/Node.js-18+-green" alt="Node.js">
 </p>
 
@@ -33,17 +33,16 @@ The original motivation from the author was that when using Claude Code Pro/Max,
 ### 🏗️ Built on Standards
 Uses **OpenTelemetry** for data collection, **Langfuse** for visualization, and **Claude's native observability** APIs. No proprietary formats, no vendor lock-in.
 
-## 🚀 Quick Start (30 seconds)
+## 🚀 Quick Start
 
-### Prerequisites
-🐳 **Docker Desktop** - [Install here](https://docker.com/products/docker-desktop) if you don't see the whale icon in your menu bar
+### Option A: With Docker (Full Stack - Recommended for beginners)
+**Prerequisites:** Docker Desktop - [Install here](https://docker.com/products/docker-desktop)
 
-### Setup
 ```bash
 # Clone and enter directory
 git clone https://github.com/lainra/claude-code-telemetry && cd claude-code-telemetry
 
-# Run automated setup
+# Run automated setup (includes Langfuse)
 ./quickstart.sh
 
 # Enable telemetry
@@ -54,6 +53,35 @@ claude "What is 2+2?"
 ```
 
 **That's it!** View your dashboard at http://localhost:3000
+
+### Option B: Without Docker (Telemetry Bridge Only)
+**Prerequisites:** Node.js 18+ and a Langfuse instance (Cloud or self-hosted)
+
+```bash
+# Clone and enter directory
+git clone https://github.com/lainra/claude-code-telemetry && cd claude-code-telemetry
+
+# Run local setup script
+./scripts/setup-local.sh
+
+# The script will guide you through:
+# 1. Installing dependencies
+# 2. Creating .env file with Langfuse credentials
+# 3. Starting the server
+
+# Start the telemetry server
+npm start
+
+# In another terminal, enable telemetry
+source claude-telemetry.env
+
+# Test it works
+claude "What is 2+2?"
+```
+
+**Get Langfuse:**
+- **Langfuse Cloud** (easiest): Sign up at https://cloud.langfuse.com and get API keys from Settings > API Keys
+- **Self-hosted**: Run Langfuse with Docker separately, or use an existing instance
 
 ### Need Help?
 Let Claude guide you through the setup:
@@ -136,26 +164,39 @@ The bridge:
 
 ## 🛠️ Installation Options
 
-### Option 1: Full Stack (Recommended)
-Includes Langfuse dashboard + telemetry bridge:
+### Option 1: Full Stack with Docker (Recommended for beginners)
+Includes Langfuse dashboard + telemetry bridge, all in Docker:
 ```bash
 ./quickstart.sh
 ```
 
-### Option 2: Bridge Only (Manual w/NPM)
-Already have Langfuse? Just run the bridge:
-```bash
-# Configure your existing Langfuse credentials
-export LANGFUSE_PUBLIC_KEY=your-public-key
-export LANGFUSE_SECRET_KEY=your-secret-key
-export LANGFUSE_HOST=your-langfuse-url
+### Option 2: Telemetry Bridge Only - No Docker (Recommended for developers)
+Run the telemetry bridge locally without Docker. You need Langfuse running separately (Cloud or self-hosted):
 
-# Install and start the bridge
+**Quick Setup:**
+```bash
+# Automated setup script
+./scripts/setup-local.sh
+```
+
+**Manual Setup:**
+```bash
+# 1. Install dependencies
 npm install
+
+# 2. Create .env file
+cat > .env <<EOF
+LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key-here
+LANGFUSE_SECRET_KEY=sk-lf-your-secret-key-here
+LANGFUSE_HOST=https://cloud.langfuse.com
+# Or for local: LANGFUSE_HOST=http://localhost:3000
+EOF
+
+# 3. Start the server
 npm start
 ```
 
-### Option 3: Bridge Only (Docker)
+### Option 3: Bridge Only with Docker
 Already have Langfuse? Run the bridge in Docker:
 ```bash
 # Create .env file with your Langfuse credentials
@@ -168,9 +209,16 @@ docker compose up telemetry-bridge
 
 ## 📋 Requirements
 
-- Docker Desktop ([install](https://docker.com/products/docker-desktop)) - For quickstart
+### For Full Stack (Docker):
+- Docker Desktop ([install](https://docker.com/products/docker-desktop))
 - Claude Code CLI (`claude`)
-- Node.js 18+ (optional) - For bridge-only mode
+
+### For Telemetry Bridge Only (No Docker):
+- Node.js 18+ ([install](https://nodejs.org/))
+- Claude Code CLI (`claude`)
+- Langfuse instance (Cloud or self-hosted):
+  - **Langfuse Cloud**: Free tier available at https://cloud.langfuse.com
+  - **Self-hosted**: Requires PostgreSQL, ClickHouse, Redis, and MinIO (see Langfuse docs)
 
 ## 🎛️ Configuration
 
@@ -181,7 +229,16 @@ docker compose up telemetry-bridge
 | `LANGFUSE_HOST` | http://localhost:3000 | Langfuse dashboard URL |
 | `LOG_LEVEL` | info | Logging verbosity |
 
-See `.env.example` for all options.
+See `.env.example` for all configuration options. To create it:
+```bash
+cat > .env <<EOF
+LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key
+LANGFUSE_SECRET_KEY=sk-lf-your-secret-key
+LANGFUSE_HOST=http://localhost:3000
+OTLP_RECEIVER_PORT=4318
+LOG_LEVEL=info
+EOF
+```
 
 ## 🔒 Privacy & Security
 
@@ -192,6 +249,7 @@ See `.env.example` for all options.
 
 ## 📚 Documentation
 
+- [Setup Without Docker](docs/SETUP_NO_DOCKER.md) - Complete guide for running without Docker
 - [Environment Variables](docs/ENVIRONMENT_VARIABLES.md) - Complete configuration guide
 - [Telemetry Guide](docs/TELEMETRY_GUIDE.md) - Understanding the data format
 
